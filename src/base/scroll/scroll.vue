@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script type="text/ecmascript-6">
+<script>
 import BScroll from 'better-scroll'
 export  default {
     props:{
@@ -20,6 +20,11 @@ export  default {
             type:Array,
             default:null
         },
+        // 监听滚动位置
+        listenScroll:{
+            type:Boolean,
+            default:false
+        }
   
     } ,
     mounted() {
@@ -37,6 +42,13 @@ export  default {
                 probeType:this.probeType,
                 click:this.click
             })
+            if (this.listenScroll) {
+                let me = this
+                this.scroll.on('scroll',(pos) => {
+                    // 在这里的this，是默认指向scroll,实际上我们需要指向实例
+                    me.$emit('scroll',pos)
+                })
+            }
             
         },
         enable() {

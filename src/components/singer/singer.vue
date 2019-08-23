@@ -1,11 +1,12 @@
 <template>
 <div class="singer">
-  <list-view :data="singers"></list-view>
+  <list-view :data="singers" @select="selectSinger"></list-view>
+  <router-view></router-view>
 
 </div>
 </template>
 
-<script type="text/ecmascript-6">
+<script>
 import { getSingerList } from 'api/singer'
 import { ERR_OK } from 'api/config'
 import Singer from 'common/js/singer'
@@ -24,6 +25,13 @@ export default {
     this._getSingerList()
   },
   methods: {
+    selectSinger(singer){
+      console.log(singer)
+      this.$router.push({
+        path:`/singer/${singer.id}`
+      })
+
+    },
     _getSingerList() {
       getSingerList().then(res => {
         if (res.code === ERR_OK) {
