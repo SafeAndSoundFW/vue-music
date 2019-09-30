@@ -36,6 +36,10 @@
 
   const TITLE_HEIGHT = 30
   const ANCHOR_HEIGHT = 18
+  // 1 右边：字母设置触摸开始和触摸移动事件，获取当前经过的index，并设置高亮，获取整体页面移动的scrollY
+  // 2 左边：滑动左边页面整体内容，根据所得到的的每一个部分的开始高度和结束高度，以及实时监听到的scrollY,计算出右边字母哪一个高亮的下标
+  // 3 顶部：滑动中，实时计算每一个区域块的diff（height2 + scrollY）,如果diff小于TITLE_HEIGHT，往上translate，如果大于的话，设置translate为0，出现动画效果
+  // 上述三个步骤，实现完整的联动
 
   export default {
 
@@ -74,7 +78,7 @@
         if (this.scrollY > 0) {
           return
         }
-        console.log(this.data[this.currentIndex])
+        // console.log(this.data[this.currentIndex])
         return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
       }
     },
@@ -84,9 +88,10 @@
         this.$emit('select',item)
       },
       onShortcutTouchStart(e) {
+        // 手指点击，获取右边每个字母的下标
         let anchorIndex = getData(e.target, 'index')
         let firstTouch = e.touches[0]
-        this.touch.y1 = firstTouch.pageY
+        this.touch.y1 = firstTouch.pageY //记录开始移动的坐标
         this.touch.anchorIndex = anchorIndex
         this.$refs.listview.scrollToElement(this.$refs.listGroup[anchorIndex], 0)
         this._scrollTo(anchorIndex)
@@ -94,6 +99,7 @@
       onShortcutTouchMove(e) {
         let firstTouch = e.touches[0]
         this.touch.y2 = firstTouch.pageY
+        // 移动了几个ANCHOR_HEIGHT，下标就加上几
         let delta = (this.touch.y2 - this.touch.y1) / ANCHOR_HEIGHT | 0
         let anchorIndex = parseInt(this.touch.anchorIndex) + delta
         this._scrollTo(anchorIndex)
@@ -103,6 +109,9 @@
         // console.log(pos)
         this.scrollY = pos.y
 
+      },
+      refresh() {
+        this.$refs.listview.refresh()
       },
       _scrollTo(index) {
         if (!index && index !=0) {
@@ -140,6 +149,7 @@
         },20)
       },
       scrollY(newY) {
+        console.log(newY,'newY')
         const listHeight = this.listHeight
         // 当滚动到顶部
         if (newY > 0) {
@@ -152,7 +162,7 @@
           let height1 = listHeight[i]
           let height2 = listHeight[i+1]
           if (-newY >= height1 && -newY < height2) {
-            console.log(height2)
+            // console.log(height2)
             this.currentIndex = i
             this.diff = height2 + newY
             return 
@@ -164,8 +174,9 @@
         this.currentIndex = listHeight.length - 2
       },
       diff(newVal) {
+        console.log(newVal,'newVal')
         let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
-     
+        console.log(fixedTop,'fixedTop')
         if (this.fixedTop == fixedTop) {
           return
         }

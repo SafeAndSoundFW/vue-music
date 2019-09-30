@@ -6,7 +6,7 @@
     <h1 class="title" v-html="title"></h1>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
       <div class="play-wrapper">
-        <div class="play" v-show="songs.length > 0" ref="playBtn">
+        <div class="play" v-show="songs.length > 0" ref="playBtn" @click="random">
           <i class="icon-play"></i>
           <span class="text">随机播放全部</span>
         </div>
@@ -16,7 +16,7 @@
     <div class="bg-layer" ref="layer"></div>
     <scroll :data="songs" class="list" ref="list" :probe-type="probeType" :listen-scroll="listenScroll" @scroll="scroll">
         <div class="song-list-wrapper">
-            <song-list :songs="songs" @select="selectItem"></song-list>
+            <song-list :rank="rank" :songs="songs" @select="selectItem"></song-list>
         </div>
         <div class="loading-container" v-show="!songs.length">
           <loading></loading>
@@ -32,12 +32,14 @@
   import Loading from 'base/loading/loading'
   import {prefixStyle} from 'common/js/dom'
   import {mapActions} from 'vuex'
+  import {playlistMixin} from 'common/js/mixin'
 
 
   const RESERVED_HEIGHT = 40
   
 
   export default {
+    mixins:[playlistMixin],
     props: {
       bgImage: {
         type: String,
@@ -50,6 +52,10 @@
       title: {
         type: String,
         default: ''
+      },
+      rank:{
+        type:Boolean,
+        default:false
       }
     },
     data() {
@@ -83,16 +89,30 @@
           })
 
         },
+        random() {
+          this.randomPlay({
+            list:this.songs
+          })
+
+        },
+        handlePlaylist(playlist){
+          const bottom = playlist.length > 0 ? '60px' : ''
+          this.$refs.list.$el.style.bottom = bottom
+          this.$refs.list.refresh()
+
+        },
     
       back() {
         this.$router.back()
       },
       ...mapActions([
-        'selectPlay'
+        'selectPlay',
+        'randomPlay'
       ])
     },
     watch:{
         scrollY(newY){
+          console.log(newY,'newY')
             // 这个层最多滚动的高度和图片高度相等，这样就不会一直网上滚动，只会滚到顶部，就不会穿透
             let translateY =Math.max(this.minTranslateY,newY)
             let zIndex = 0
@@ -132,6 +152,7 @@
     },
     mounted(){
         this.imageHeight = this.$refs.bgImage.clientHeight
+        // 滚动上方预留的间距
         this.minTranslateY = -this.imageHeight + RESERVED_HEIGHT
         this.$refs.list.$el.style.top=`${this.imageHeight}px`
     }

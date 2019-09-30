@@ -7,10 +7,11 @@
 	  </template>
 	  
 	  <script>
+	//   singer-detail -> music-list ->scroll -> song-list 
 		import {ERR_OK} from 'api/config'
 		import {mapGetters} from 'vuex'
 		import {getSingerDetail} from 'api/singer'
-		  import {createSong} from 'common/js/song'
+		import {createSong,processSongsUrl,isValidMusic} from 'common/js/song'
 		import MusicList from 'components/music-list/music-list'
 		export default {
 			computed:{
@@ -40,20 +41,19 @@
 					    this.$router.back()
 					   return
 				    }
-					getSingerDetail(this.singer.id).then(res => {
-						if (res.code === ERR_OK) {
-							
-							 this.songs = this._normalizeSongs(res.data.list)
-							 console.log( this.songs)
-						}
-					})
-
-				},
-				      _normalizeSongs(list) {
+					getSingerDetail(this.singer.id).then((res) => {
+							if (res.code === ERR_OK) {
+								processSongsUrl(this._normalizeSongs(res.data.list)).then((songs) => {
+								this.songs = songs
+								})
+							}
+							})
+						},
+				   _normalizeSongs (list) {
 						let ret = []
 						list.forEach((item) => {
-						let {musicData} = item
-						if (musicData.songid && musicData.albummid) {
+						let { musicData } = item
+						if (isValidMusic(musicData)) {
 							ret.push(createSong(musicData))
 						}
 						})
